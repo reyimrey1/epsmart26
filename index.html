@@ -1,0 +1,125 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plateforme EPS</title>
+<style>
+:root{--n:#12304a;--b:#176b87;--m:#dff4ee;--p:#f4f7fa;--l:#dbe3ea;--t:#64748b;--r:#c0392b}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,Segoe UI,Arial,sans-serif;background:var(--p);color:#203040}
+header{background:linear-gradient(120deg,var(--n),var(--b));color:#fff;padding:16px max(16px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header b{font-size:20px}header small{opacity:.85}main{max-width:1100px;margin:20px auto;padding:0 14px 40px}
+.card{background:#fff;border:1px solid var(--l);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 4px 16px #12304a0d}
+h2{margin:0 0 6px;color:var(--n)}h3{margin:16px 0 8px;color:var(--b)}.s{color:var(--t);font-size:13px}
+label{display:block;font-weight:650;font-size:13px;margin:10px 0 4px}input,select{width:100%;padding:10px;border:1px solid #cbd5df;border-radius:9px;font:inherit}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+button,.bt{border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer;background:var(--n);color:#fff;margin:10px 6px 0 0}
+button.a{background:#e7eef3;color:var(--n)}button.r{background:#fdecea;color:var(--r)}
+.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}.k div{background:#f9fbfc;border:1px solid var(--l);border-radius:12px;padding:12px}.k b{font-size:24px;color:var(--b);display:block}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs button{margin:0;background:#fff;color:var(--n);border:1px solid var(--l)}.tabs button.on{background:var(--n);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid var(--l);padding:7px;text-align:left}th{background:#edf4f7}.w{overflow:auto}
+.ar{direction:rtl;text-align:right;font-size:16px}.code{font:700 26px monospace;letter-spacing:2px;background:var(--m);padding:14px;border-radius:10px;text-align:center;user-select:all}
+.list{max-height:260px;overflow:auto;border:1px solid var(--l);border-radius:10px}.list div{padding:10px 12px;border-bottom:1px solid #eef2f5;cursor:pointer}.list div:hover,.list .sel{background:var(--m)}
+.bar{display:flex;align-items:flex-end;gap:10px;height:110px}.bar i{flex:1;background:var(--b);border-radius:6px 6px 0 0;position:relative;min-height:2px}.bar i span{position:absolute;top:-18px;width:100%;text-align:center;font:12px sans-serif;color:#203040}
+.qr{text-align:center;border:1px solid var(--l);border-radius:12px;padding:12px}.qr svg{width:100%;max-width:230px;height:auto}
+.err{color:var(--r);font-weight:600;margin-top:8px}.ok{color:#16704b;font-weight:600}textarea{width:100%;min-height:90px;border:1px solid #cbd5df;border-radius:9px;padding:9px;font:12px monospace}
+#pa{display:none}@media print{header,main{display:none!important}#pa{display:block!important}#pa .qr{break-inside:avoid;display:inline-block;width:46%;margin:6px}}
+</style></head><body>
+<header><div><b>EPS · Plateforme classes</b><br><small id="hs">Éducation Physique et Sportive</small></div><div id="ho"></div></header>
+<main id="A"></main><div id="pa"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const K='eps_v3',GATE='EPS2026',$=s=>document.querySelector(s),A=$('#A');
+const Q=['Quel est le nom de votre premier établissement scolaire ?','Quelle est votre ville préférée ?','Quel est le prénom de votre meilleur ami d\'enfance ?'];
+const LV={TC:'Tronc commun','1BAC':'1ère année Bac','2BAC':'2ème année Bac'},ORD=['TC','1BAC','2BAC'];
+let db=JSON.parse(localStorage[K]||'null'),cur=null,tab='cl';const save=()=>localStorage[K]=JSON.stringify(db);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const H=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const nz=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const b64=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const ub=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const pack=o=>b64(pako.deflate(JSON.stringify(o))),unpack=s=>JSON.parse(pako.inflate(ub(s),{to:'string'}));
+const gen=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',r=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(x=>a[x%a.length]).join('');return 'EPS-'+r(4)+'-'+r(4)};
+const lv=c=>(c.match(/^(TC|1BAC|2BAC)/)||[])[1]||'';
+const RX=/(?<![A-Z0-9])(TC|1BAC|2BAC)([A-Z]{0,6})-(\d{1,2})(?![0-9])/,norm=s=>String(s).toUpperCase().replace(/[_.()\s]+/g,' ');
+const sortC=()=>Object.keys(db.cl).sort((a,b)=>ORD.indexOf(lv(a))-ORD.indexOf(lv(b))||a.localeCompare(b,'fr',{numeric:true}));
+const M=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,f1=x=>x==null?'–':x.toFixed(1);
+
+async function parse(f){
+ const wb=XLSX.read(await f.arrayBuffer()),R=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''}),top=R.slice(0,15);
+ let code=(norm(f.name).match(RX)||[])[0]||top.flat().map(c=>(norm(c).match(RX)||[])[0]).find(Boolean);
+ if(!code)throw Error('Classe introuvable dans « '+f.name+' » (attendu : TCPS-1, TCSCF-2, 2BACPC-5…)');
+ const after=l=>{for(const r of top){const i=r.findIndex(x=>String(x).replace(/[\s:]/g,'')===l);if(i>=0)return String(r.slice(i+1).find(x=>String(x).trim())||'').trim()}return''};
+ const S=[];for(const r of R){const i=r.findIndex(x=>/^[A-Z]\d{9}$/.test(String(x).trim()));if(i<0)continue;
+  S.push({m:String(r[i]).trim(),ar:String(r[i+1]||'').trim(),dob:String(r.find(x=>/^\d{2}[-\/]\d{2}[-\/]\d{4}$/.test(String(x).trim()))||'').trim(),n:[6,8,10].map(k=>r[k]).filter(x=>x!==''&&!isNaN(x)).map(Number)})}
+ if(!S.length)throw Error('Aucun élève (code Massar) trouvé dans « '+f.name+' »');
+ return{code,S,prof:after('الاستاذ'),etab:after('مؤسسة')}}
+
+async function addFiles(files){const out=[];for(const f of files){const p=await parse(f);db.cl[p.code]={s:p.S,r:db.cl[p.code]?.r||{}};db.pa=db.pa||p.prof;db.ea=db.ea||p.etab;out.push(p.code)}
+ if(Object.keys(db.cl).length>9)throw Error('Maximum 9 classes par professeur.');return out}
+
+function home(){location.hash='';$('#ho').innerHTML='';A.innerHTML=`<div class="card"><h2>Bienvenue</h2><p class="s">Espace réservé aux professeurs d'EPS. Les élèves accèdent à leur classe en scannant le QR code remis par leur professeur.</p>
+<label>Code d'accès professeur</label><input id="g" type="password" placeholder="Code commun"><button onclick="gate()">Entrer</button><div class="err" id="e"></div></div>`}
+function gate(){if($('#g').value.trim()!==GATE)return $('#e').textContent='Code incorrect.';db?login():setup()}
+
+function setup(){A.innerHTML=`<div class="card"><h2>Créer mon espace professeur</h2><p class="s">Importez vos fichiers Massar (jusqu'à 9). Le niveau, la filière et le numéro de classe sont lus dans le nom du fichier (ex. TCPS-1, TCSCF-2, 2BACPC-5).</p>
+<div class="g"><div><label>Établissement</label><input id="et"></div><div><label>Nom</label><input id="nm"></div><div><label>Prénom</label><input id="pr"></div></div>
+<label>Fichiers Excel des classes (.xlsx)</label><input id="fl" type="file" accept=".xlsx,.xls" multiple>
+<h3>Récupération du code (si vous l'oubliez)</h3><div class="g"><div><label>Date de naissance</label><input id="db" type="date"></div><div><label>Question secrète</label><select id="qq">${Q.map((q,i)=>`<option value="${i}">${q}</option>`)}</select></div><div><label>Réponse</label><input id="an"></div></div>
+<button onclick="create()">Créer et importer</button><div class="err" id="e"></div></div>`}
+async function create(){const v=i=>$('#'+i).value.trim(),fs=[...$('#fl').files];
+ if(!v('et')||!v('nm')||!v('pr')||!v('db')||!v('an')||!fs.length)return $('#e').textContent='Tous les champs et au moins un fichier sont obligatoires.';
+ if(fs.length>9)return $('#e').textContent='Maximum 9 fichiers.';
+ try{const code=gen();db={et:v('et'),nm:v('nm'),pr:v('pr'),ch:await H(code),rh:await H(nz([v('nm'),v('pr'),v('db'),$('#qq').value,v('an')].join('|'))),cl:{}};
+ const c=await addFiles(fs);save();sessionStorage.in=1;
+ A.innerHTML=`<div class="card"><h2>Espace créé ✔</h2><p>${c.length} classe(s) importée(s) : <b>${c.join(', ')}</b></p><p>Votre code personnel pour revenir plus tard :</p><div class="code">${code}</div><p class="s">Notez-le maintenant : il n'est plus affiché ensuite. En cas de perte : « Code perdu » (nom, prénom, date de naissance, réponse secrète).</p><button onclick="dash()">Ouvrir mon tableau de bord</button></div>`}catch(e){db=JSON.parse(localStorage[K]||'null');$('#e').textContent=e.message}}
+
+function login(){A.innerHTML=`<div class="card"><h2>Bonjour ${esc(db.pr)} ${esc(db.nm)}</h2><label>Votre code personnel</label><input id="c" placeholder="EPS-XXXX-XXXX"><button onclick="doLogin()">Accéder</button><button class="a" onclick="recover()">Code perdu</button><div class="err" id="e"></div></div>`}
+async function doLogin(){if(await H($('#c').value.trim().toUpperCase())!==db.ch)return $('#e').textContent='Code incorrect.';sessionStorage.in=1;dash()}
+function recover(){A.innerHTML=`<div class="card"><h2>Récupérer mon accès</h2><div class="g"><div><label>Nom</label><input id="nm"></div><div><label>Prénom</label><input id="pr"></div><div><label>Date de naissance</label><input id="db" type="date"></div><div><label>Question</label><select id="qq">${Q.map((q,i)=>`<option value="${i}">${q}</option>`)}</select></div><div><label>Réponse</label><input id="an"></div></div><button onclick="doRec()">Générer un nouveau code</button><div class="err" id="e"></div></div>`}
+async function doRec(){const v=i=>$('#'+i).value.trim();if(await H(nz([v('nm'),v('pr'),v('db'),$('#qq').value,v('an')].join('|')))!==db.rh)return $('#e').textContent='Informations incorrectes.';
+ const c=gen();db.ch=await H(c);save();sessionStorage.in=1;A.innerHTML=`<div class="card"><h2>Nouveau code</h2><div class="code">${c}</div><button onclick="dash()">Ouvrir mon tableau de bord</button></div>`}
+
+function stats(c){const S=db.cl[c].s,all=S.flatMap(s=>s.n),mv=S.map(s=>M(s.n)).filter(x=>x!=null),ag=S.map(s=>+(s.dob.split(/[-\/]/)[2]||0)).filter(Boolean).map(y=>2026-y),bins=[0,0,0,0];
+ mv.forEach(x=>bins[x<5?0:x<10?1:x<15?2:3]++);return{n:S.length,age:M(ag),mean:M(mv),pass:mv.length?100*mv.filter(x=>x>=10).length/mv.length:null,bins,rep:Object.keys(db.cl[c].r).length}}
+
+function dash(t){if(!db||!sessionStorage.in)return home();tab=t||tab;cur=cur&&db.cl[cur]?cur:sortC()[0];
+ $('#hs').textContent=db.et+' · '+db.pr+' '+db.nm;$('#ho').innerHTML='<button class="a" onclick="sessionStorage.removeItem(\'in\');home()">Quitter</button>';
+ const T=[['cl','Classes & analyses'],['qr','QR codes élèves'],['rp','Réponses reçues'],['pf','Profil']];
+ let h='<div class="tabs">'+T.map(x=>`<button class="${tab==x[0]?'on':''}" onclick="dash('${x[0]}')">${x[1]}</button>`).join('')+'</div>';
+ if(tab=='cl')h+=vCl();if(tab=='qr')h+=vQr();if(tab=='rp')h+=vRp();if(tab=='pf')h+=vPf();A.innerHTML=h;if(tab=='qr')drawQr()}
+
+function rows(c){return db.cl[c].s.map((s,i)=>{const r=db.cl[c].r[i]||{};return[i+1,s.ar,r.fn||'',r.fp||'',s.m,s.dob,c,LV[lv(c)],M(s.n)==null?'':+M(s.n).toFixed(2)]})}
+const HD=['N°','Nom (arabe)','Nom (français)','Prénom (français)','Code Massar','Date de naissance','Classe','Niveau','Moyenne'];
+function vCl(){const cs=sortC(),c=cur,s=stats(c),mx=Math.max(...s.bins,1),L=['0–4','5–9','10–14','15–20'];
+ return`<div class="card"><h2>Mes classes</h2><div class="tabs">${cs.map(x=>`<button class="${x==c?'on':''}" onclick="cur='${x}';dash()">${x}</button>`).join('')}</div>
+<p class="s">${LV[lv(c)]} · classe ${c}</p>
+<div class="k"><div><b>${s.n}</b>élèves</div><div><b>${f1(s.age)}</b>âge moyen</div><div><b>${f1(s.mean)}</b>moyenne /20</div><div><b>${s.pass==null?'–':Math.round(s.pass)+'%'}</b>≥ 10/20</div><div><b>${s.rep}/${s.n}</b>noms en français reçus</div></div>
+<h3>Répartition des moyennes</h3><div class="bar">${s.bins.map((v,i)=>`<i style="height:${v/mx*100}%"><span>${v}</span></i>`).join('')}</div><div class="bar" style="height:auto;margin-top:4px">${L.map(x=>`<span class="s" style="flex:1;text-align:center">${x}</span>`).join('')}</div>
+<button onclick="xl('${c}')">Excel — ${c}</button><button class="a" onclick="xl()">Excel — toutes les classes</button><button class="a" onclick="pdf('${c}')">PDF — ${c}</button><button class="a" onclick="addMore()">+ Importer une classe</button><input id="more" type="file" accept=".xlsx,.xls" multiple style="display:none" onchange="doMore(this.files)"><div class="err" id="e"></div>
+<h3>Liste de la classe</h3><div class="w"><table><tr>${HD.map(x=>`<th>${x}</th>`).join('')}</tr>${rows(c).map(r=>'<tr>'+r.map((x,i)=>`<td${i==1?' class="ar"':''}>${esc(x)}</td>`).join('')+'</tr>').join('')}</table></div></div>`}
+function addMore(){$('#more').click()}
+async function doMore(fs){try{await addFiles(fs);save();dash()}catch(e){$('#e').textContent=e.message}}
+function xl(c){const wb=XLSX.utils.book_new();for(const k of c?[c]:sortC())XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([HD,...rows(k)]),k);XLSX.writeFile(wb,'EPS_'+(c||'toutes_classes')+'.xlsx')}
+function pdf(c){$('#pa').innerHTML=`<h2>${esc(db.et)} — Classe ${c} (${LV[lv(c)]})</h2><p>Professeur : ${esc(db.pr)} ${esc(db.nm)} · Année 2025/2026</p><table><tr>${HD.map(x=>`<th>${x}</th>`).join('')}</tr>${rows(c).map(r=>'<tr>'+r.map((x,i)=>`<td${i==1?' class="ar"':''}>${esc(x)}</td>`).join('')+'</tr>').join('')}</table>`;print()}
+
+function vQr(){return`<div class="card"><h2>QR codes par classe</h2><p class="s">Un QR par classe : l'élève scanne, retrouve son nom dans la liste de <b>sa</b> classe uniquement, puis saisit son nom en français. Le QR ne contient ni code Massar ni date de naissance. Le site doit être hébergé en ligne (https) pour que le lien fonctionne sur les téléphones.</p><button onclick="pa()">Imprimer / PDF des QR</button><div class="g" id="qg" style="margin-top:12px"></div></div>`}
+async function link(c){const S=await Promise.all(db.cl[c].s.map(async s=>[s.ar,(await H(c+s.m)).slice(0,6)]));return location.href.split('#')[0]+'#q='+pack({c,e:db.et,p:db.pr+' '+db.nm,s:S})}
+async function qrs(){const o=[];for(const c of sortC()){const u=await link(c);let q='';try{const x=qrcode(0,'L');x.addData(u,'Byte');x.make();q=x.createSvgTag({cellSize:5,margin:2,scalable:true})}catch{q='<p class="err">Classe trop grande pour un QR</p>'}o.push(`<div class="qr">${q}<h3 style="margin:6px 0">${c}</h3><div class="s">${LV[lv(c)]} · ${db.cl[c].s.length} élèves<br>Prof. ${esc(db.pr)} ${esc(db.nm)}</div></div>`)}return o.join('')}
+async function drawQr(){$('#qg').innerHTML=await qrs()}async function pa(){$('#pa').innerHTML=await qrs();print()}
+
+function vRp(){return`<div class="card"><h2>Réponses des élèves</h2><p class="s">Après validation, l'élève reçoit un code réponse (et un bouton WhatsApp). Collez ici les codes reçus, un par ligne.</p><textarea id="rc" placeholder="R1.xxxxxxxx"></textarea><button onclick="impR()">Importer</button><div id="e" class="err"></div></div>`}
+function impR(){let n=0,bad=0;for(const l of $('#rc').value.split(/\s+/).filter(Boolean)){try{const o=unpack(l.replace(/^R1\./,''));if(db.cl[o.c]&&db.cl[o.c].s[o.i]){db.cl[o.c].r[o.i]={fn:o.n,fp:o.p,ar:o.a};n++}else bad++}catch{bad++}}save();$('#e').innerHTML=`<span class="ok">${n} importée(s)</span>${bad?' · '+bad+' invalide(s)':''}`}
+function vPf(){return`<div class="card"><h2>Profil</h2><p>${esc(db.pr)} ${esc(db.nm)} — ${esc(db.et)}</p><p class="s">Nom arabe : ${esc(db.pa||'–')} · ${sortC().length} classe(s)</p><button class="a" onclick="rc()">Générer un nouveau code</button><button class="r" onclick="if(confirm('Tout effacer sur cet appareil ?')){localStorage.removeItem(K);sessionStorage.clear();db=null;home()}">Effacer mes données</button><div id="e"></div></div>`}
+async function rc(){const c=gen();db.ch=await H(c);save();$('#e').innerHTML=`<div class="code" style="margin-top:12px">${c}</div>`}
+
+async function student(p){let o;try{o=unpack(p)}catch{A.innerHTML='<div class="card"><h2>Lien invalide</h2><p>Scannez à nouveau le QR code de votre professeur.</p></div>';return}
+ $('#hs').textContent=o.e;let sel=-1;
+ A.innerHTML=`<div class="card"><h2>Classe ${esc(o.c)}</h2><p class="s">Professeur : ${esc(o.p)}</p><label>1. Cherchez votre nom puis cliquez dessus</label><input id="q" class="ar" placeholder="بحث…"><div class="list ar" id="ls"></div>
+<div id="f" style="display:none"><label>2. Votre code Massar</label><input id="ms" placeholder="Ex. D123456789"><label>3. Nom de famille en français</label><input id="fn"><label>4. Prénom en français</label><input id="fp"><label>Nom en arabe (modifiable)</label><input id="fa" class="ar"><button onclick="sub()">Valider</button><div class="err" id="e"></div></div><div id="out"></div></div>`;
+ const ls=()=>{const q=$('#q').value.trim();$('#ls').innerHTML=o.s.map((s,i)=>[s,i]).filter(x=>x[0][0].includes(q)).map(x=>`<div class="${x[1]==sel?'sel':''}" onclick="pick(${x[1]})">${esc(x[0][0])}</div>`).join('')||'<div>Aucun résultat</div>'};
+ window.pick=i=>{sel=i;$('#f').style.display='block';$('#fa').value=o.s[i][0];ls()};$('#q').oninput=ls;ls();
+ window.sub=async()=>{const v=i=>$('#'+i).value.trim();if(!v('fn')||!v('fp')||!v('ms'))return $('#e').textContent='Tous les champs sont obligatoires.';
+  if((await H(o.c+v('ms').toUpperCase())).slice(0,6)!==o.s[sel][1])return $('#e').textContent='Ce code Massar ne correspond pas au nom choisi.';
+  const code='R1.'+pack({c:o.c,i:sel,a:v('fa'),n:v('fn').toUpperCase(),p:v('fp')});
+  $('#out').innerHTML=`<h3 class="ok">Merci ! Envoyez ce code à votre professeur</h3><textarea readonly onclick="this.select()">${code}</textarea><a class="bt" style="display:inline-block;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(code)}">Envoyer par WhatsApp</a><button class="a" onclick="navigator.clipboard.writeText('${code}')">Copier</button>`;$('#f').style.display='none'}}
+
+addEventListener('hashchange',boot);function boot(){if(location.hash.startsWith('#q='))student(location.hash.slice(3));else if(db&&sessionStorage.in)dash();else home()}boot();
+</script></body></html>
